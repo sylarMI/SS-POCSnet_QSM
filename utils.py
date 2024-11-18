@@ -14,14 +14,21 @@ def list_simu_data(opt):
         img1_path.append(opt['train_path'] + opt['train_img1_path'][0] + str(opt['train_index'][ind])+'.nii.gz')
         img2_path.append(opt['train_path'] + opt['train_img2_path'][0] + str(opt['train_index'][ind])+'.nii.gz')
         label_path.append(opt['train_path'] + opt['train_label_path'][0]+ str(opt['train_index'][ind])+'.nii.gz')
-#         img1_path.append(opt['train_path'] + opt['train_img1_path'][1] + str(opt['train_index'][ind])+'.nii.gz')
-#         img2_path.append(opt['train_path'] + opt['train_img2_path'][1] + str(opt['train_index'][ind])+'.nii.gz')
-#         label_path.append(opt['train_path'] + opt['train_label_path'][1]+ str(opt['train_index'][ind])+'.nii.gz')
-#         img1_path.append(opt['train_path'] + opt['train_img1_path'][2] + str(opt['train_index'][ind])+'.nii.gz')
-#         img2_path.append(opt['train_path'] + opt['train_img2_path'][2] + str(opt['train_index'][ind])+'.nii.gz')
-#         label_path.append(opt['train_path'] + opt['train_label_path'][2]+ str(opt['train_index'][ind])+'.nii.gz')
         
     return img1_path, img2_path, label_path
+
+def list_mb_data(opt):
+    nil_img_path = []
+    nil_liv_path = []
+    nil_les_path = []
+    
+    for shape1 in range(len(opt['train_index'])):
+        sub_fol_path = opt['train_path'] 
+        nil_img_path.append(sub_fol_path + opt['train_img1_path']+str(opt['train_index'][shape1])+'.nii.gz')
+        nil_liv_path.append(sub_fol_path + opt['train_img2_path']+str(opt['train_index'][shape1])+'.nii.gz')
+        nil_les_path.append(sub_fol_path + opt['train_label_path']+str(opt['train_index'][shape1])+'.nii.gz')
+
+    return nil_img_path, nil_liv_path, nil_les_path
 
 # %% qsm in vivo data
 def list_invivo_data(opt):
@@ -35,26 +42,13 @@ def list_invivo_data(opt):
         nil_liv_path.append(sub_fol_path + opt['train_img2_path']+str(opt['train_index'][shape1, 0])+'-'+str(opt['train_index'][shape1, 1])+'.nii.gz')
         nil_les_path.append(sub_fol_path + opt['train_label_path']+str(opt['train_index'][shape1, 0])+'-'+str(opt['train_index'][shape1, 1])+'.nii.gz')
 
-    return nil_img_path, nil_liv_path,nil_les_path
-
-def list_mb_data(opt):
-    nil_img_path = []
-    nil_liv_path = []
-    nil_les_path = []
-    
-    for shape1 in range(len(opt['train_index'])):
-        sub_fol_path = opt['train_path'] 
-        nil_img_path.append(sub_fol_path + opt['train_img1_path']+str(opt['train_index'][shape1])+'.nii.gz')
-#         nil_img_path.append(sub_fol_path + opt['train_img1_path']+'.nii')
-        nil_liv_path.append(sub_fol_path + opt['train_img2_path']+str(opt['train_index'][shape1])+'.nii.gz')
-        nil_les_path.append(sub_fol_path + opt['train_label_path']+str(opt['train_index'][shape1])+'.nii.gz')
-        
-    return nil_img_path, nil_liv_path,nil_les_path
+    return nil_img_path, nil_liv_path, nil_les_path
 
 # %% single qsm in vivo data
 def list_single_data(opt):
     nil_img_path = []
     nil_liv_path = []
+    nil_plus_path = []
     nil_les_path = []
     
     sub_fol_path = opt['train_path'] 
@@ -62,7 +56,7 @@ def list_single_data(opt):
     nil_liv_path.append(sub_fol_path + opt['train_img2_path'] + '.nii.gz')
     nil_les_path.append(sub_fol_path + opt['train_label_path'] + '.nii.gz')
 
-    return nil_img_path, nil_liv_path,nil_les_path
+    return nil_img_path, nil_liv_path, nil_plus_path, nil_les_path
 
 def list_invivo_batch(opt):
     nil_img_path = []
@@ -88,7 +82,6 @@ def open_img_seg(nil_img_path,nil_seg_path = None):
         seg = None
     return img, seg
 
-
 def findcenter3d(img):
     h_pos = np.array(np.where(np.sum(img,axis=(1,2))>0)).squeeze()
     w_pos = np.array(np.where(np.sum(img,axis=(0,2))>0)).squeeze()
@@ -101,44 +94,33 @@ def findcenter3d(img):
         d_pos = img.shape[2]/2
     return int(np.mean(h_pos)), int(np.mean(w_pos)), int(np.mean(d_pos))
 
-def display_slice(display_num, Pred, Pred1, Label):
+def display_slice(sub, display_num, Pred, Pred1, Label):
     fig = plt.figure(figsize=(12,10))
     nonorm = matplotlib.colors.NoNorm()
     col = np.size(display_num)
     raw = 4
-    sub = 0
     for i in range(col):
         subplot = fig.add_subplot(raw, col, i + 1)
         subplot.set_xticks([]), subplot.set_yticks([])
-#         im=subplot.imshow(np.rot90(np.clip(Pred[0,:,:,display_num[i],0], -0.1, 0.1) * 5 + 0.5, -1),cmap = plt.cm.gray, norm=nonorm)
-        im=subplot.imshow(np.rot90(Pred[sub,:,:,display_num[i],0], -1))
-#         plt.colorbar(im,subplot)
+        im=subplot.imshow(np.rot90(np.clip(Pred[sub,:,:,display_num[i],0], -0.1, 0.1), -1))
         if i == 0:
             subplot.set_ylabel('Prediction', fontsize=18)
         
         subplot = fig.add_subplot(raw, col, i + 1 +col)
         subplot.set_xticks([]), subplot.set_yticks([])
-#         im=subplot.imshow(np.rot90(np.clip(Pred[0,:,:,display_num[i],0], -0.1, 0.1) * 5 + 0.5, -1),cmap = plt.cm.gray, norm=nonorm)
-        im=subplot.imshow(np.rot90(Pred1[sub,:,:,display_num[i],0], -1))
-#         plt.colorbar(im,subplot)
+        im=subplot.imshow(np.rot90(np.clip(Pred1[sub,:,:,display_num[i],0], -0.1, 0.1), -1))
         if i == 0:
             subplot.set_ylabel('Prediction_xk', fontsize=18)
         
         subplot = fig.add_subplot(raw, col, i + 1 + col*2)
         subplot.set_xticks([]), subplot.set_yticks([])
-#         im=subplot.imshow(np.rot90(np.clip(Label[0,:,:,display_num[i],0], -0.1, 0.1) * 5 + 0.5,-1),
-#                          cmap = plt.cm.gray, norm=nonorm)
-        im=subplot.imshow(np.rot90(Label[sub,:,:,display_num[i],0], -1))
-#         plt.colorbar(im,subplot)
+        im=subplot.imshow(np.rot90(np.clip(Label[sub,:,:,display_num[i],0], -0.1, 0.1), -1))
         if i == 0:
             subplot.set_ylabel('Label', fontsize=18)
              
         subplot = fig.add_subplot(raw, col, i + 1 + col*3)
         subplot.set_xticks([]), subplot.set_yticks([])
-#         im=subplot.imshow(np.rot90(np.clip((Label[0,:,:,display_num[i],0]-Pred[0,:,:,display_num[i],0]),
-#                                           -0.1, 0.1) * 5 + 0.5, -1))
-        im=subplot.imshow(np.rot90(Label[sub,:,:,display_num[i],0]-Pred[sub,:,:,display_num[i],0], -1))
-#         plt.colorbar(im,subplot)
+        im=subplot.imshow(np.rot90(np.clip(Label[sub,:,:,display_num[i],0]-Pred[sub,:,:,display_num[i],0], -0.1, 0.1), -1))
         if i == 0:
             subplot.set_ylabel('Dif', fontsize=18)
     plt.show()
@@ -159,7 +141,6 @@ def save_nii(data, voxel_size,  save_folder, name):
 
     nifti_affine = np.array([[voxel_size[0],0,0,voxel_size[0]], [0,voxel_size[1],0,voxel_size[1]], [0,0,voxel_size[2],voxel_size[2]], [0,0,0,1]], dtype=np.float)
 
-    #data = np.fliplr(data) 
     nifti = nib.Nifti1Image(data, affine=nifti_affine)
     nib.save(nifti, os.path.join(save_folder, name + '.nii.gz')) 
     
@@ -169,3 +150,24 @@ def resize3d(img, shape):
         resize(np.transpose(tmp, (2, 0, 1)), dsize=(shape[1],shape[2]),
                interpolation=cv2.INTER_LINEAR), (1, 2, 0))  # INTER_LANCZOS4
     return tmp_z
+
+
+def plt_center(x1_train, x2_train, y_train):
+    ch,cw,cd = findcenter3d(y_train[0])
+    aa=cw
+    dd=cd
+
+    f, axarr = plt.subplots(2, 3, figsize=(20, 10))
+    axarr[1,0].imshow(np.flip(np.transpose(x1_train[0,:,aa,:,0].squeeze()),0))
+    axarr[1,0].axis('off')
+    axarr[0,2].imshow(np.transpose(y_train[0,:,:,dd].squeeze()))
+    axarr[0,2].axis('off')
+    axarr[0,0].imshow(np.transpose(x1_train[0,:,:,dd,0].squeeze()))
+    axarr[0,0].axis('off')
+    axarr[1,1].imshow(np.flip(np.transpose(x2_train[0,:,aa,:].squeeze()),0))
+    axarr[1,1].axis('off')
+    axarr[1,2].imshow(np.flip(np.transpose(y_train[0,:,aa,:].squeeze()),0))
+    axarr[1,2].axis('off')
+    axarr[0,1].imshow(np.transpose(x2_train[0,:,:,dd].squeeze()))
+    axarr[0,1].axis('off')
+    plt.show()
